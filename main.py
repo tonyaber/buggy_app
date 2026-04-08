@@ -2,7 +2,7 @@ import random
 import time
 import logging
 from fastapi import FastAPI, HTTPException
-
+import re
 # logging to file
 
 logging.basicConfig(
@@ -38,9 +38,30 @@ def auth():
     logging.warning("Unauthorized access attempt")
     raise HTTPException(status_code=401, detail="Unauthorized")
 
+LOG_PATTERN = re.compile(
+    r'(?P<timestamp>\d{4}-\d{2}-\d{2} '
+    r'\d{2}:\d{2}:\d{2},\d{3}) '
+    r'(?P<level>INFO|WARNING|ERROR) '
+    r'(?P<message>.+)'
+)
 
 @app.get("/internal/logs")
-def get_logs():
-    with open("logs/app.log") as f:
-        return f.read()
+def get_logs(limit: int = 100):
+    result = []
 
+    with open("logs/app.log") as f:
+        for line in f.readlines()[-limit:]:
+            match = LOG_PATTERN.match(line)
+            if not match:
+                continue
+
+            data = match.groupdict()
+            data["status"] = {
+                "ERROR": 500,
+                "WARNING": 400,
+                "INFO": 200
+            }.get(data["level"], 200)
+
+            result.append(data)
+
+    return result
