@@ -4,11 +4,13 @@ import logging
 from fastapi import FastAPI, HTTPException
 
 # logging to file
+
 logging.basicConfig(
     filename="logs/app.log",
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(message)s",
 )
+
 
 app = FastAPI()
 
@@ -35,3 +37,10 @@ def sometimes_fails():
 def auth():
     logging.warning("Unauthorized access attempt")
     raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+@app.get("/internal/logs")
+def get_logs():
+    with open("logs/app.log") as f:
+        return f.read()
+

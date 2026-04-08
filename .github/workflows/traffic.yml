@@ -1,0 +1,16 @@
+name: Generate traffic for buggy app
+
+on:
+  schedule:
+    - cron: "*/3 * * * *"   # кожні 3 хв
+  workflow_dispatch:
+
+jobs:
+  traffic:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hit buggy endpoints
+        run: |
+          curl -s https://buggy-app.onrender.com/ > /dev/null
+          curl -s https://buggy-app.onrender.com/sometimes-fails > /dev/null
+          curl -s https://buggy-app.onrender.com/auth > /dev/null
